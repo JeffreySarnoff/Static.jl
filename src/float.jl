@@ -113,9 +113,13 @@ Base.inv(x::StaticFloat64{N}) where {N} = fdiv(one(x), x)
 #     Expr(:call, Expr(:curly, :StaticInt, exponent(M)))
 # end
 
-@inline function Base.exponent(::StaticFloat64{M}) where {M}
-    static(exponent(M))
+# these functions cannot be @generated the sane way as `cos`
+for f in (:exponent, :significand, :sign, :precision)
+    @eval @inline function Base.Math.$f(::StaticFloat64{M}) where {M}
+        @generated Base.Math.$f(x::StaticFloat64{M}) where {M} = Expr(:call, Expr(:curly, :StaticFloat64, $f(M)))    
+    end
 end
+    
 
 for f in (:sin, :cos, :tan, :asin, :atan, :acos,
     :sinh, :cosh, :tanh, :asinh, :acosh, :atanh,
